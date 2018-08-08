@@ -42,6 +42,7 @@ function linkDir {
 	ln -sf $1 $2
 }
 
+
 # Função para copiar os arquivos para o diretório
 function copyToDir {
 	echo $2 | sed 's%/[^/]*$%/%' | xargs mkdir -p
@@ -56,5 +57,5 @@ function installRazerAcpiFix {
 }
 
 function Remind {
-    echo $1 | tee -a ~/DOTFILES-REMIDERS.txt
+    echo "Reminder: $1" | tee -a ~/DOTFILES-REMIDERS.txt
 }
