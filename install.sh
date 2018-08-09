@@ -3,10 +3,9 @@
 # Funções auxiliares
 
 . ./helper.sh --source-only
-rm ~/DOTFILES-REMIDERS.txt
+rm -f ~/DOTFILES-REMIDERS.txt
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 GIT_DIR=`mktemp -d -p "$DIR"`
-
 echo "Iniciando reconfiguração do sistema"
 
 ask "Deseja prosseguir?" &&
@@ -14,11 +13,35 @@ ask "Deseja prosseguir?" &&
 echo "Instalando AUR helper"
 gpg --recv-keys 4C3CE98F9579981C21CA1EC3465022E743D71E39
 cd $GIT_DIR
+echo "1"
 mkdir aurman
+echo "2"
 cd aurman
 git clone https://aur.archlinux.org/aurman.git .
-makepkg -Si --noconfirm
+makepkg -si --noconfirm
 cd $DIR
+
+echo "Instalando firewall"
+sudo pacman -S ufw gufw --noconfirm
+sudo systemctl enable ufw
+sudo systemctl start ufw
+sudo ufw default deny
+sudo ufw allow from 192.168.0.0/24
+sudo ufw allow Deluge
+sudo ufw limit SSH
+sudo ufw enable
+sudo ufw status
+
+echo "Instalando fontes"
+aurman -S ttf-ms-fonts --noconfirm
+
+echo "Configurando mirrors pacman"
+sudo cp -f root/etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist
+echo "Configurando pacman"
+sudo cp -f root/etc/pacman.conf /etc/pacman.conf
+sudo systemctl enable --now paccache.timer
+echo "Configurando alsi"
+aurman -S alsi --noconfirm
 
 if ask "Deseja configurar os arquivos de boot?" S; then
     echo "Instalando intel-ucode"
@@ -34,12 +57,16 @@ if ask "Instalar para Razer Blade?" S; then
     Remind "Adicionar \"initrd /razer_acpi_fix.img\" após o ucode no arquivo .conf de /boot/loader/entries"
     echo "Instalando Razer Genie"
     aurman -S openrazer-meta razergenie --noconfirm
+    sudo mv -f openrazer-daemon.service /usr/lib/systemd/system/
+    systemctl --user enable openrazer-daemon
+    sudo gpasswd -a $USER plugdev
     echo "Instalando TLP"
     sudo pacman -S tlp
-    sudo systemctl enable tlp tlp-sleep
+    
     sudo systemctl mask systemd-rfkill.service
     sudo systemctl mask systemd-rfkill.socket
     sudo ln -sf dotfiles/root/etc/default/tlp /etc/default/tlp
+    sudo systemctl enable --now tlp tlp-sleep
 fi
 
 if ask "Deseja configurar bumblebee e nvidia-xrun?" S; then
@@ -53,18 +80,18 @@ if ask "Deseja configurar bumblebee e nvidia-xrun?" S; then
     mkdir nvidia-xrun
     cd nvidia-xrun
     git clone https://aur.archlinux.org/nvidia-xrun-git.git .
-    makepkg -Si --noconfirm
+    makepkg -si --noconfirm
     cd $DIR
     echo "VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/nvidia_icd.json vblank_mode=0 startkde" ~/.nvidia-xinitrc
 fi
 
 if ask "Deseja configurar o kdeplasma?" S; then
-    sudo pacman -S plasma-meta sddm --noconfirm
+    sudo pacman -S plasma-meta sddm packagekit-qt5 --noconfirm
     rm ~/.config/kdeglobals
     ln -sf home/config/kdeglobals ~/.config/kdeglobals
     rm ~/.config/plasmarc
     ln -sf home/config/plasmarc ~/.config/plasmarc
-    aurman -S plymouth
+    aurman -S plymouth --noconfirm
     Remind "Reconfigurar o mkinitcpio com # mkinitcpio -p linux ou linux-ck"
     Remind "Habilitar sddm ou sddm-plymouth, a depender da preferência"
 fi
@@ -80,3 +107,19 @@ if ask "Deseja configurar plataformas de jogos (incluindo wine)?" S; then
     WINEPREFIX=~/.wine setup_dxvk64
     WINEPREFIX=~/.wine setup_dxvk32
 fi
+
+if ask "Configurar programas?" S; then
+    echo "Instalando visual-studio-code-bin"
+    aurman -S visual-studio-code-bin --noconfirm
+    echo "Instalando chromium"
+    sudo pacman -S chromium pepper-flash --noconfirm
+    aurman -S chromium-widevine --noconfirm
+    echo "Instalando mailspring"
+    aurman -S mailspring --noconfirm
+    echo "Instalando libreoffice"
+    aurman -S libreoffice-fresh hunspell-pt-br libreoffice-extension-languagetool jre8-openjdk libreoffice-fresh-pt-br --noconfirm
+    echo "Instalando spotify"
+    aurman -S spotify --noconfirm
+fi
+
+rm -rf tmp.*
