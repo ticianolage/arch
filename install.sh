@@ -9,39 +9,43 @@ GIT_DIR=`mktemp -d -p "$DIR"`
 echo "Iniciando reconfiguração do sistema"
 
 ask "Deseja prosseguir?" &&
+if pacman -Qi aurman | grep -q "erro"; then
+    echo "Instalando AUR helper"
+    gpg --recv-keys 4C3CE98F9579981C21CA1EC3465022E743D71E39
+    cd $GIT_DIR
+    echo "1"
+    mkdir aurman
+    echo "2"
+    cd aurman
+    git clone https://aur.archlinux.org/aurman.git .
+    makepkg -si --noconfirm
+    cd $DIR
+fi
 
-echo "Instalando AUR helper"
-gpg --recv-keys 4C3CE98F9579981C21CA1EC3465022E743D71E39
-cd $GIT_DIR
-echo "1"
-mkdir aurman
-echo "2"
-cd aurman
-git clone https://aur.archlinux.org/aurman.git .
-makepkg -si --noconfirm
-cd $DIR
+if verifyPacman ufw "Firewall"; then
+    sudo systemctl enable ufw
+    sudo systemctl start ufw
+    sudo ufw default deny
+    sudo ufw allow from 192.168.0.0/24
+    sudo ufw allow Deluge
+    sudo ufw limit SSH
+    sudo ufw enable
+    sudo ufw status
+fi
 
-echo "Instalando firewall"
-sudo pacman -S ufw gufw --noconfirm
-sudo systemctl enable ufw
-sudo systemctl start ufw
-sudo ufw default deny
-sudo ufw allow from 192.168.0.0/24
-sudo ufw allow Deluge
-sudo ufw limit SSH
-sudo ufw enable
-sudo ufw status
-
-echo "Instalando fontes"
-aurman -S ttf-ms-fonts --noconfirm
+verifyPacman ttf-ms-fonts "fontes"
 
 echo "Configurando mirrors pacman"
 sudo cp -f root/etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist
 echo "Configurando pacman"
 sudo cp -f root/etc/pacman.conf /etc/pacman.conf
+sudo pacman -S pacman-contrib --noconfirm
 sudo systemctl enable --now paccache.timer
 echo "Configurando alsi"
 aurman -S alsi --noconfirm
+echo "Configurando bluetooth"
+sudo pacman -S bluez bluez-utils pulseaudio-alsa pulseaudio-bluetooth bluez-libs --noconfirm
+sudo systemctl enable --now bluetooth
 
 if ask "Deseja configurar os arquivos de boot?" S; then
     echo "Instalando intel-ucode"
@@ -65,8 +69,9 @@ if ask "Instalar para Razer Blade?" S; then
     
     sudo systemctl mask systemd-rfkill.service
     sudo systemctl mask systemd-rfkill.socket
-    sudo ln -sf dotfiles/root/etc/default/tlp /etc/default/tlp
+    sudo ln -sf $(pwd)/root/etc/default/tlp /etc/default/tlp
     sudo systemctl enable --now tlp tlp-sleep
+    sudo ln -sf $(pwd)/root/etc/systemd/logind.conf /etc/systemd/logind.conf
 fi
 
 if ask "Deseja configurar bumblebee e nvidia-xrun?" S; then
@@ -74,7 +79,7 @@ if ask "Deseja configurar bumblebee e nvidia-xrun?" S; then
     sudo gpasswd -a $USER bumblebee
     sudo systemctl enable bumblebeed
     echo "Copiando arquivo de configuração"
-    sudo ln -s root/etc/bumblebee/bumblebee.conf /etc/bumblebee/bumblebee.conf
+    sudo ln -sf $(pwd)/root/etc/bumblebee/bumblebee.conf /etc/bumblebee/bumblebee.conf
     
     cd $GIT_DIR
     mkdir nvidia-xrun
@@ -88,9 +93,9 @@ fi
 if ask "Deseja configurar o kdeplasma?" S; then
     sudo pacman -S plasma-meta sddm packagekit-qt5 --noconfirm
     rm ~/.config/kdeglobals
-    ln -sf home/config/kdeglobals ~/.config/kdeglobals
+    ln -sf $(pwd)/home/config/kdeglobals ~/.config/kdeglobals
     rm ~/.config/plasmarc
-    ln -sf home/config/plasmarc ~/.config/plasmarc
+    ln -sf $(pwd)/home/config/plasmarc ~/.config/plasmarc
     aurman -S plymouth --noconfirm
     Remind "Reconfigurar o mkinitcpio com # mkinitcpio -p linux ou linux-ck"
     Remind "Habilitar sddm ou sddm-plymouth, a depender da preferência"

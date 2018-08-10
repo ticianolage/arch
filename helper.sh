@@ -42,6 +42,26 @@ function linkDir {
 	ln -sf $1 $2
 }
 
+function verifyPacman {
+    if pacman -Qi $1 | grep -q "erro"; then
+        echo "Instalando $2"
+        sudo pacman -S $1 --noconfirm
+        return 0
+    else
+        return 1
+    fi
+}
+
+function verifyAurman {
+    if pacman -Qi $1 | grep -q "erro"; then
+        echo "Instalando $2"
+        aurman -S $1 --noconfirm
+        return 0
+    else
+        return 1
+    fi
+}
+
 
 # Função para copiar os arquivos para o diretório
 function copyToDir {
