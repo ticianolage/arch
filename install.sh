@@ -20,12 +20,6 @@ if ! pacman -Qi aurman; then
     cd $DIR
 fi
 
-if verifyPacman nano "nano"; then
-    echo "Ok"
-fi
-
-ask "Continuar" &&
-
 if verifyPacman ufw "Firewall"; then
     sudo systemctl enable ufw
     sudo systemctl start ufw
