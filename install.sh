@@ -31,9 +31,6 @@ if verifyPacman ufw "Firewall"; then
     sudo ufw status
 fi
 if verifyPacman networkmanager "NetworkManager"; then
-   verifyPacman iwd "iwd"
-   sudo systemctl enable --now iwd
-   sudo ln -s $(pwd)/root/etc/NetworkManager/conf.d/
    sudo systemctl enable --now NetworkManager
 fi
 
