@@ -13,9 +13,7 @@ if pacman -Qi aurman | grep -q "erro"; then
     echo "Instalando AUR helper"
     gpg --recv-keys 4C3CE98F9579981C21CA1EC3465022E743D71E39
     cd $GIT_DIR
-    echo "1"
     mkdir aurman
-    echo "2"
     cd aurman
     git clone https://aur.archlinux.org/aurman.git .
     makepkg -si --noconfirm
@@ -26,11 +24,32 @@ if verifyPacman ufw "Firewall"; then
     sudo systemctl enable ufw
     sudo systemctl start ufw
     sudo ufw default deny
-    sudo ufw allow from 192.168.0.0/24
+    sudo ufw allow from 192.168.5s.0/24
     sudo ufw allow Deluge
     sudo ufw limit SSH
     sudo ufw enable
     sudo ufw status
+fi
+if verifyPacman NetworkManager "NetworkManager"; then
+   sudo pacman -S networkmanager --noconfirm
+   sudo pacman -S iwd --noconfirm
+   sudo systemctl enable --now iwd
+   sudo ln -s $(pwd)/root/etc/NetworkManager/conf.d/
+   sudo systemctl enable --now NetworkManager
+fi
+
+if verifyPacman wd719x-firmware "correção de mkinitcpio"; then
+    cd $GIT_DIR
+    mkdir wd719x
+    cd mkdir
+    git clone https://aur.archlinux.org/wd719x-firmware.git .
+    makepkg -sri --noconfirm
+    cd ..
+    mkdir aic94xx
+    cd aic94xx
+    git clone https://aur.archlinux.org/aic94xx-firmware.git .
+    makepkg -sri --noconfirm
+    cd $DIR
 fi
 
 verifyPacman ttf-ms-fonts "fontes"
