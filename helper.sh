@@ -43,7 +43,7 @@ function linkDir {
 }
 
 function verifyPacman {
-    if pacman -Qi $1 | grep "erro" > /dev/null; then
+    if ! pacman -Qi $1; then
         echo "Instalando $2"
         sudo pacman -S $1 --noconfirm
         return 1
@@ -53,7 +53,7 @@ function verifyPacman {
 }
 
 function verifyAurman {
-    if pacman -Qi $1 | grep "erro" > /dev/null; then
+    if ! pacman -Qi $1; then
         echo "Instalando $2"
         aurman -S $1 --noconfirm
         return 1

@@ -9,7 +9,7 @@ GIT_DIR=`mktemp -d -p "$DIR"`
 echo "Iniciando reconfiguração do sistema"
 
 ask "Deseja prosseguir?" &&
-if pacman -Qi aurman | grep -q "erro"; then
+if ! pacman -Qi aurman; then
     echo "Instalando AUR helper"
     gpg --recv-keys 4C3CE98F9579981C21CA1EC3465022E743D71E39
     cd $GIT_DIR
@@ -20,6 +20,11 @@ if pacman -Qi aurman | grep -q "erro"; then
     cd $DIR
 fi
 
+if verifyPacman nano "nano"; then
+    echo "Ok"
+fi
+
+ask "Continuar" &&
 
 if verifyPacman ufw "Firewall"; then
     sudo systemctl enable ufw
