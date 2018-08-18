@@ -20,6 +20,7 @@ if pacman -Qi aurman | grep -q "erro"; then
     cd $DIR
 fi
 
+
 if verifyPacman ufw "Firewall"; then
     sudo systemctl enable ufw
     sudo systemctl start ufw
@@ -30,9 +31,8 @@ if verifyPacman ufw "Firewall"; then
     sudo ufw enable
     sudo ufw status
 fi
-if verifyPacman NetworkManager "NetworkManager"; then
-   sudo pacman -S networkmanager --noconfirm
-   sudo pacman -S iwd --noconfirm
+if verifyPacman networkmanager "NetworkManager"; then
+   verifyPacman iwd "iwd"
    sudo systemctl enable --now iwd
    sudo ln -s $(pwd)/root/etc/NetworkManager/conf.d/
    sudo systemctl enable --now NetworkManager

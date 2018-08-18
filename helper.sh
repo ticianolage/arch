@@ -43,22 +43,22 @@ function linkDir {
 }
 
 function verifyPacman {
-    if pacman -Qi $1 | grep -q "erro"; then
+    if pacman -Qi $1 | grep "erro" > /dev/null; then
         echo "Instalando $2"
         sudo pacman -S $1 --noconfirm
-        return 0
-    else
         return 1
+    else
+        return 0
     fi
 }
 
 function verifyAurman {
-    if pacman -Qi $1 | grep -q "erro"; then
+    if pacman -Qi $1 | grep "erro" > /dev/null; then
         echo "Instalando $2"
         aurman -S $1 --noconfirm
-        return 0
-    else
         return 1
+    else
+        return 0
     fi
 }
 
